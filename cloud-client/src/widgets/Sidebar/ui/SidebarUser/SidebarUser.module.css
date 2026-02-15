@@ -1,0 +1,22 @@
+.SidebarUser {
+  cursor: pointer;
+
+  &:hover {
+    box-shadow: 3px 2px 12px -10px black;
+  }
+}
+
+.isSelectedUser {
+  border: 1px solid #1677ff;
+}
+
+.isCardDisabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.userInfo {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
