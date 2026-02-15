@@ -1,0 +1,15 @@
+{
+  "name": "cloud_storage",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently \"cd cloud-server && npm run dev\" \"cd cloud-client && npm run dev\""
+  },
+  "keywords": ["cloud", "storage", "express", "mongoose", "real-time", "nodejs"],
+  "author": "Vladislav Sidorov",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
