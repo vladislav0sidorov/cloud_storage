@@ -18,4 +18,12 @@ router.get('/activate/:link', userControllerInstance.activate)
 
 router.get('/users', authMiddleware, userControllerInstance.getUsers)
 
+router.patch(
+  '/user/password',
+  authMiddleware,
+  body('currentPassword').notEmpty().withMessage('Введите текущий пароль'),
+  body('newPassword').isLength({ min: 6, max: 32 }).withMessage('Новый пароль от 6 до 32 символов'),
+  userControllerInstance.updatePassword
+)
+
 export default router

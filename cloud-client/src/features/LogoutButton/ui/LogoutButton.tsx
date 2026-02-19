@@ -2,7 +2,11 @@ import { Button } from 'antd'
 import { FC, useState } from 'react'
 import { useLogout } from '../model/services/logout/logout'
 
-export const LogoutButton: FC = () => {
+interface LogoutButtonProps {
+  className?: string
+}
+
+export const LogoutButton: FC<LogoutButtonProps> = ({ className }) => {
   const [isLoading, setIsLoading] = useState(false)
   const [logoutMutation] = useLogout()
 
@@ -18,7 +22,7 @@ export const LogoutButton: FC = () => {
   }
 
   return (
-    <Button loading={isLoading} onClick={onLogout} type="primary">
+    <Button loading={isLoading} onClick={onLogout} color="danger" variant="outlined" className={className}>
       Выйти
     </Button>
   )

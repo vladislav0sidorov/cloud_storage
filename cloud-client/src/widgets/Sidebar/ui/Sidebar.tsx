@@ -1,23 +1,28 @@
-import { Card } from 'antd'
+import { CloudOutlined } from '@ant-design/icons'
 import { FC } from 'react'
 import cls from './Sidebar.module.css'
-import { SidebarUserList } from './SidebarUserList/SidebarUserList'
+import { LogoutButton } from '@/features/LogoutButton'
+import { SidebarNavigationList } from './SidebarNavigationList/SidebarNavigation'
 
 export const Sidebar: FC = () => {
   return (
-    <Card
-      title="Пользователи"
-      style={{ overflow: 'hidden' }}
-      styles={{
-        body: {
-          overflowY: 'auto',
-          height: '100%',
-          padding: 0
-        }
-      }}
-      className={cls.Sidebar}
-    >
-      <SidebarUserList />
-    </Card>
+    <aside className={cls.sidebar}>
+      <div className={cls.header}>
+        <div className={cls.logo}>
+          <div className={cls.logoIcon}>
+            <CloudOutlined />
+          </div>
+          Cloud storage
+        </div>
+      </div>
+      <div className={cls.navWrap}>
+        <SidebarNavigationList />
+      </div>
+      <div className={cls.footer}>
+        <div className={cls.logoutWrap}>
+          <LogoutButton className={cls.logoutButton} />
+        </div>
+      </div>
+    </aside>
   )
 }

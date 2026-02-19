@@ -2,8 +2,9 @@
 // import { ForbiddenPage } from '@/pages/ForbiddenPage'
 import { LoginPage } from '@/pages/LoginPage'
 import { AppRoutesProps } from '@/shared/types/router'
-import { AppRoutes, getRouteLogin, getRouteMain, getRouteRegister } from '@/shared/consts/router'
+import { AppRoutes, getRouteLogin, getRouteMain, getRouteProfile, getRouteRegister } from '@/shared/consts/router'
 import { MainPage } from '@/pages/MainPage'
+import { ProfilePage } from '@/pages/ProfilePage'
 import { RegisterPage } from '@/pages/RegisterPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
 
@@ -19,6 +20,11 @@ export const routeConfig: Record<AppRoutes, AppRoutesProps> = {
   [AppRoutes.MAIN]: {
     path: getRouteMain(),
     element: <MainPage />,
+    authOnly: true
+  },
+  [AppRoutes.PROFILE]: {
+    path: getRouteProfile(),
+    element: <ProfilePage />,
     authOnly: true
   },
   // last

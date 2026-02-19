@@ -83,6 +83,27 @@ class UserService {
     return users
   }
 
+  async updatePassword(userId, currentPassword, newPassword) {
+    const user = await UserModel.findById(userId)
+
+    if (!user) {
+      throw ApiError.BadRequest('Пользователь не найден')
+    }
+
+    const isPassEquals = await bcrypt.compare(currentPassword, user.password)
+
+    if (!isPassEquals) {
+      throw ApiError.BadRequest('Неверный текущий пароль')
+    }
+
+    const hashPassword = await bcrypt.hash(newPassword, 5)
+    user.password = hashPassword
+
+    await user.save()
+
+    return { message: 'Пароль успешно изменён' }
+  }
+
   async _generateAndSaveTokensForUser(user) {
     const userDto = new UserDto(user)
     const tokens = TokenService.generateToken(userDto.id)

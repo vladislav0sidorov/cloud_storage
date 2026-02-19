@@ -10,7 +10,7 @@ export const userSlice = createSlice({
   name: 'user',
   initialState,
   reducers: {
-    setInited: (state) => {
+    setInited: state => {
       state._inited = true
     },
     setAuthData: (state, action) => {
@@ -34,7 +34,6 @@ export const userSlice = createSlice({
       action => action.type === 'user/pending',
       state => {
         state._inited = true
-
       }
     )
     builder.addMatcher(

@@ -5,7 +5,6 @@ import { USER_LOCALSTORAGE_KEY } from '@/shared/consts/localStorage'
 import { useSelector } from 'react-redux'
 import { PageLoader } from '@/widgets/PageLoader'
 import { MainLayout } from '@/shared/layouts/MainLayout'
-import { Navbar } from '@/widgets/Navbar'
 import { useDispatch } from 'react-redux'
 import { Sidebar } from '@/widgets/Sidebar'
 import { notification } from 'antd'
@@ -36,7 +35,7 @@ export const App: FC = () => {
     <NotificationContext.Provider value={api}>
       {contextHolder}
       <Suspense fallback={<PageLoader />}>
-        <MainLayout header={auth && <Navbar />} sidebar={auth && <Sidebar />} content={<AppRouter />} />
+        <MainLayout sidebar={auth && <Sidebar />} content={<AppRouter />} />
       </Suspense>
     </NotificationContext.Provider>
   )

@@ -90,4 +90,19 @@ export default class UserController {
       next(error)
     }
   }
+
+  async updatePassword(req, res, next) {
+    try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        return next(ApiError.BadRequest('Ошибка валидации', errors.array()))
+      }
+      const userId = req.user.userId
+      const { currentPassword, newPassword } = req.body
+      const result = await UserService.updatePassword(userId, currentPassword, newPassword)
+      return res.json(result)
+    } catch (error) {
+      next(error)
+    }
+  }
 }
