@@ -93,13 +93,7 @@ export const ChangePersonalInfoForm: FC<ChangePersonalInfoFormProps> = ({ authUs
   }
 
   return (
-    <Form
-      form={form}
-      layout="vertical"
-      onFinish={onFinish}
-      validateTrigger="onBlur"
-      style={{ maxWidth: 480 }}
-    >
+    <Form form={form} layout="vertical" onFinish={onFinish} validateTrigger="onBlur">
       <Form.Item name="gender" label="Пол">
         <Select
           placeholder="Выберите пол"
@@ -115,7 +109,10 @@ export const ChangePersonalInfoForm: FC<ChangePersonalInfoFormProps> = ({ authUs
       <Form.Item
         name="firstName"
         label="Имя"
-        rules={[{ required: true, message: 'Введите имя' }, { whitespace: true, message: 'Введите имя' }]}
+        rules={[
+          { required: true, message: 'Введите имя' },
+          { whitespace: true, message: 'Введите имя' }
+        ]}
       >
         <Input placeholder="Имя" />
       </Form.Item>
@@ -123,7 +120,10 @@ export const ChangePersonalInfoForm: FC<ChangePersonalInfoFormProps> = ({ authUs
       <Form.Item
         name="lastName"
         label="Фамилия"
-        rules={[{ required: true, message: 'Введите фамилию' }, { whitespace: true, message: 'Введите фамилию' }]}
+        rules={[
+          { required: true, message: 'Введите фамилию' },
+          { whitespace: true, message: 'Введите фамилию' }
+        ]}
       >
         <Input placeholder="Фамилия" />
       </Form.Item>
@@ -140,11 +140,7 @@ export const ChangePersonalInfoForm: FC<ChangePersonalInfoFormProps> = ({ authUs
         <Input placeholder="Город или населённый пункт" />
       </Form.Item>
 
-      <Form.Item
-        name="phone"
-        label="Номер телефона"
-        rules={[{ validator: validatePhone }]}
-      >
+      <Form.Item name="phone" label="Номер телефона" rules={[{ validator: validatePhone }]}>
         <Input placeholder="+7 999 123-45-67" />
       </Form.Item>
 
