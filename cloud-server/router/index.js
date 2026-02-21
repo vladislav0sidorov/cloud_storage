@@ -26,4 +26,17 @@ router.patch(
   userControllerInstance.updatePassword
 )
 
+router.patch(
+  '/user/avatar',
+  authMiddleware,
+  body('avatar').notEmpty().withMessage('Укажите изображение аватара'),
+  userControllerInstance.updateAvatar
+)
+
+router.patch(
+  '/user/personal-info',
+  authMiddleware,
+  userControllerInstance.updatePersonalInfo
+)
+
 export default router

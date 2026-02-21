@@ -104,6 +104,40 @@ class UserService {
     return { message: 'Пароль успешно изменён' }
   }
 
+  async updateAvatar(userId, avatar) {
+    const user = await UserModel.findById(userId)
+
+    if (!user) {
+      throw ApiError.BadRequest('Пользователь не найден')
+    }
+
+    user.avatar = avatar
+    await user.save()
+
+    return { message: 'Аватар обновлён' }
+  }
+
+  async updatePersonalInfo(userId, payload) {
+    const user = await UserModel.findById(userId)
+
+    if (!user) {
+      throw ApiError.BadRequest('Пользователь не найден')
+    }
+
+    const { gender, firstName, lastName, patronymic, dateOfBirth, locality, phone } = payload
+    if (gender !== undefined) user.gender = gender || undefined
+    if (firstName !== undefined) user.firstName = firstName || undefined
+    if (lastName !== undefined) user.lastName = lastName || undefined
+    if (patronymic !== undefined) user.patronymic = patronymic || undefined
+    if (dateOfBirth !== undefined) user.dateOfBirth = dateOfBirth ? new Date(dateOfBirth) : undefined
+    if (locality !== undefined) user.locality = locality || undefined
+    if (phone !== undefined) user.phone = phone || undefined
+
+    await user.save()
+
+    return { message: 'Персональные данные обновлены' }
+  }
+
   async _generateAndSaveTokensForUser(user) {
     const userDto = new UserDto(user)
     const tokens = TokenService.generateToken(userDto.id)

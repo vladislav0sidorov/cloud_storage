@@ -5,8 +5,15 @@ export interface IUser {
     email: string
     id: string
     isActivated: boolean
+    avatar?: string
+    gender?: 'male' | 'female' | ''
+    firstName?: string
+    lastName?: string
+    patronymic?: string
+    dateOfBirth?: string
+    locality?: string
+    phone?: string
   }
-
 }
 
 export interface IErrors {

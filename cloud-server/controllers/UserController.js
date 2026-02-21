@@ -94,13 +94,60 @@ export default class UserController {
   async updatePassword(req, res, next) {
     try {
       const errors = validationResult(req)
+
       if (!errors.isEmpty()) {
         return next(ApiError.BadRequest('Ошибка валидации', errors.array()))
       }
+
       const userId = req.user.userId
       const { currentPassword, newPassword } = req.body
       const result = await UserService.updatePassword(userId, currentPassword, newPassword)
+
       return res.json(result)
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  async updateAvatar(req, res, next) {
+    try {
+      const errors = validationResult(req)
+
+      if (!errors.isEmpty()) {
+        return next(ApiError.BadRequest('Ошибка валидации', errors.array()))
+      }
+
+      const userId = req.user.userId
+      const { avatar } = req.body
+      await UserService.updateAvatar(userId, avatar)
+
+      return res.json({ message: 'Аватар обновлён' })
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  async updatePersonalInfo(req, res, next) {
+    try {
+      const errors = validationResult(req)
+
+      if (!errors.isEmpty()) {
+        return next(ApiError.BadRequest('Ошибка валидации', errors.array()))
+      }
+
+      const userId = req.user.userId
+      const { gender, firstName, lastName, patronymic, dateOfBirth, locality, phone } = req.body
+      await UserService.updatePersonalInfo(userId, {
+        gender,
+        firstName,
+        lastName,
+        patronymic,
+        dateOfBirth,
+        locality,
+        phone
+      })
+
+      return res.json({ message: 'Персональные данные обновлены' })
     } catch (error) {
       next(error)
     }
