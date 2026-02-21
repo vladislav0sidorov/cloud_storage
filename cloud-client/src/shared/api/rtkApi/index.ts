@@ -3,6 +3,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 
 export const rtkApi = createApi({
   reducerPath: 'api',
+  tagTypes: ['FileList'],
   baseQuery: fetchBaseQuery({
     credentials: 'include',
     baseUrl: import.meta.env.VITE_API_URL,

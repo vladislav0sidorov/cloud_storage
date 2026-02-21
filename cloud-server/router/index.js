@@ -2,9 +2,12 @@ import { Router } from 'express'
 import UserController from '../controllers/UserController.js'
 import { body } from 'express-validator'
 import authMiddleware from '../middlewares/authMiddleware.js'
+import fileStorageRouter from './fileStorageRouter.js'
 
 const router = Router()
 const userControllerInstance = new UserController()
+
+router.use('/files', fileStorageRouter)
 
 router.post('/register', body('email').isEmail(), body('password').isLength({ min: 6, max: 32 }), userControllerInstance.register)
 

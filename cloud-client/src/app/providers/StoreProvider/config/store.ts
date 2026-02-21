@@ -2,6 +2,7 @@ import { configureStore, Reducer, ReducersMapObject } from '@reduxjs/toolkit'
 import { StateSchema } from './StateSchema'
 
 import { createReducerManager } from './reducerManager'
+import { fileStorageReducer } from '@/entities/File'
 import { loginReducer } from '@/features/LoginByUsername'
 import { userReducer } from '@/entities/User'
 import { rtkApi } from '@/shared/api/rtkApi'
@@ -13,6 +14,7 @@ export function createReduxStore(initialState?: StateSchema, asyncReducers?: Red
     login: loginReducer,
     register: registerReducer,
     user: userReducer,
+    fileStorage: fileStorageReducer,
     [rtkApi.reducerPath]: rtkApi.reducer,
   }
 

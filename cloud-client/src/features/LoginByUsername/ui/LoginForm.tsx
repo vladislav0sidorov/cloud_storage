@@ -76,7 +76,7 @@ export const LoginForm: FC = () => {
           <Form.Item
             name="password"
             validateTrigger="onBlur"
-            validateStatus={isPasswordError ? 'error' : ''}
+            validateStatus="error"
             help={isPasswordError ? errors?.message : 'Неизвестная ошибка авторизации'}
             rules={[{ required: true, message: 'Пожалуйста, введите свой пароль' }]}
           >

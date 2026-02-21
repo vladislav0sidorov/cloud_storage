@@ -7,7 +7,14 @@
   "scripts": {
     "dev": "nodemon index.js"
   },
-  "keywords": ["websocket", "chat", "express", "mongoose", "real-time", "nodejs"],
+  "keywords": [
+    "websocket",
+    "chat",
+    "express",
+    "mongoose",
+    "real-time",
+    "nodejs"
+  ],
   "author": "Vladislav Sidorov",
   "license": "MIT",
   "dependencies": {
@@ -20,6 +27,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.15.0",
     "mongoose": "^8.13.2",
+    "multer": "^2.0.2",
     "nodemailer": "^6.10.1",
     "uuid": "^11.1.0",
     "ws": "^8.18.2"
