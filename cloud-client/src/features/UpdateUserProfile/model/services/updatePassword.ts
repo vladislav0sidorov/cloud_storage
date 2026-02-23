@@ -12,8 +12,7 @@ const updatePasswordApi = rtkApi.injectEndpoints({
         url: '/user/password',
         method: 'PATCH',
         body
-      }),
-      invalidatesTags: () => [{ type: 'User' as const }, { type: 'FileList' as const }]
+      })
     })
   })
 })

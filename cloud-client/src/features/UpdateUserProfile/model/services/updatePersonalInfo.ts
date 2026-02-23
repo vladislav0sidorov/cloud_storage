@@ -17,8 +17,7 @@ const updatePersonalInfoApi = rtkApi.injectEndpoints({
         url: '/user/personal-info',
         method: 'PATCH',
         body
-      }),
-      invalidatesTags: () => [{ type: 'User' as const }, { type: 'FileList' as const }]
+      })
     })
   })
 })

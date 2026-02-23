@@ -14,7 +14,7 @@ const PORT = process.env.PORT || 4000
 const app = express()
 const server = http.createServer(app)
 
-app.use(express.json({ limit: '10mb' }))
+app.use(express.json())
 app.use(cookieParser())
 app.use(
   cors({
