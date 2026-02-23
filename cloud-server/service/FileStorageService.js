@@ -22,7 +22,7 @@ class FileStorageService {
   async list(userId, parentId = null) {
     const query = { userId, parentId: parentId || null }
     const items = await FileModel.find(query).sort({ isFolder: -1, name: 1 }).lean()
-    return items.map(({ _id, name, path: filePath, size, isFolder, parentId, userId: uid, mimeType, createdAt }) => ({
+    const mapped = items.map(({ _id, name, path: filePath, size, isFolder, parentId, userId: uid, mimeType, createdAt }) => ({
       id: _id.toString(),
       name,
       path: filePath,
@@ -33,6 +33,17 @@ class FileStorageService {
       mimeType,
       createdAt
     }))
+    // для папок подставляем рекурсивный размер содержимого
+    const withFolderSizes = await Promise.all(
+      mapped.map(async (item) => {
+        if (item.isFolder) {
+          const folderSize = await this.getFolderSize(item.id)
+          return { ...item, size: folderSize }
+        }
+        return item
+      })
+    )
+    return withFolderSizes
   }
 
   async createFolder(userId, parentId, name) {
@@ -174,6 +185,20 @@ class FileStorageService {
     if (!file) return null
     if (file.isFolder) return null
     return file
+  }
+
+  /**
+   * Возвращает суммарный размер всех файлов внутри папки (рекурсивно).
+   */
+  async getFolderSize(folderId) {
+    const id = folderId instanceof mongoose.Types.ObjectId ? folderId : new mongoose.Types.ObjectId(folderId)
+    const descendantIds = await this._collectDescendantIds(id)
+    if (descendantIds.length === 0) return 0
+    const result = await FileModel.aggregate([
+      { $match: { _id: { $in: descendantIds }, isFolder: false } },
+      { $group: { _id: null, total: { $sum: '$size' } } }
+    ])
+    return result[0]?.total ?? 0
   }
 
   /**

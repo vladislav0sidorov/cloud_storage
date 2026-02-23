@@ -96,7 +96,7 @@ export const FileStorageTable: FC<FileStorageTableProps> = props => {
       dataIndex: 'size',
       key: 'size',
       width: 120,
-      render: (_: unknown, record: IFileItem) => (record.isFolder ? '—' : formatBytes(record.size ?? 0))
+      render: (_: unknown, record: IFileItem) => formatBytes(record.size ?? 0)
     },
     {
       title: '',
