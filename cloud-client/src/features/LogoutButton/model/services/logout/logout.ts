@@ -8,6 +8,7 @@ const logout = rtkApi.injectEndpoints({
         url: "/logout",
         method: "POST"
       }),
+      invalidatesTags: () => [{ type: 'User' as const }, { type: 'FileList' as const }],
       async onQueryStarted(_, { dispatch }) {
         try {
           dispatch(userActions.logout())

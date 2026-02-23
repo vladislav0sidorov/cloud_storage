@@ -8,6 +8,7 @@ export const updateAvatar = rtkApi.injectEndpoints({
         method: 'PATCH',
         body: { avatar },
       }),
+      invalidatesTags: () => [{ type: 'User' as const }, { type: 'FileList' as const }],
     }),
   }),
 })

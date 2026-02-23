@@ -12,29 +12,20 @@ const upload = multer({
   limits: { fileSize: 500 * 1024 * 1024 }
 })
 
-const controller = new FileStorageController()
+const fileStorageController = new FileStorageController()
 
 const router = Router()
 
-router.get('/', authMiddleware, controller.list)
+router.get('/', authMiddleware, fileStorageController.list)
 
-router.post(
-  '/folder',
-  authMiddleware,
-  body('name').trim().notEmpty().withMessage('Укажите имя папки'),
-  controller.createFolder
-)
+router.post('/folder', authMiddleware, body('name').trim().notEmpty().withMessage('Укажите имя папки'), fileStorageController.createFolder)
 
-router.post('/upload', authMiddleware, upload.single('file'), controller.upload)
+router.post('/upload', authMiddleware, upload.single('file'), fileStorageController.upload)
 
-router.patch(
-  '/:id/move',
-  authMiddleware,
-  controller.move
-)
+router.patch('/:id/move', authMiddleware, fileStorageController.move)
 
-router.get('/:id/download', authMiddleware, controller.download)
+router.get('/:id/download', authMiddleware, fileStorageController.download)
 
-router.delete('/:id', authMiddleware, controller.remove)
+router.delete('/:id', authMiddleware, fileStorageController.remove)
 
 export default router

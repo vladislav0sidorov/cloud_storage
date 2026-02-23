@@ -78,9 +78,7 @@ class FileStorageService {
     const newTotal = used + file.size
     if (newTotal > STORAGE_LIMIT_BYTES) {
       await fs.unlink(file.path).catch(() => {})
-      throw ApiError.BadRequest(
-        `Превышен лимит хранилища (1 ГБ). Занято: ${this._formatBytes(used)}, загрузка: ${this._formatBytes(file.size)}`
-      )
+      throw ApiError.BadRequest(`Превышен лимит хранилища (1 ГБ). Занято: ${this._formatBytes(used)}, загрузка: ${this._formatBytes(file.size)}`)
     }
 
     const userDir = path.join(UPLOADS_DIR, userId.toString())
@@ -183,8 +181,10 @@ class FileStorageService {
     const ids = []
     let currentLevel = [folderId]
     while (currentLevel.length > 0) {
-      const children = await FileModel.find({ parentId: { $in: currentLevel } }).select('_id isFolder').lean()
-      const childIds = children.map((c) => c._id)
+      const children = await FileModel.find({ parentId: { $in: currentLevel } })
+        .select('_id isFolder')
+        .lean()
+      const childIds = children.map(c => c._id)
       ids.push(...childIds)
       currentLevel = childIds
     }
@@ -201,7 +201,9 @@ class FileStorageService {
     if (item.isFolder) {
       const descendantIds = await this._collectDescendantIds(item._id)
       const allIds = [item._id, ...descendantIds]
-      const filesToUnlink = await FileModel.find({ _id: { $in: allIds }, isFolder: false }).select('path').lean()
+      const filesToUnlink = await FileModel.find({ _id: { $in: allIds }, isFolder: false })
+        .select('path')
+        .lean()
       for (const f of filesToUnlink) {
         if (f.path) await fs.unlink(f.path).catch(() => {})
       }

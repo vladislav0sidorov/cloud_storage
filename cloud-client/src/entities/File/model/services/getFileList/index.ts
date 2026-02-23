@@ -8,7 +8,10 @@ export const getFileList = rtkApi.injectEndpoints({
         url: '/files',
         params: parentId != null ? { parentId } : {}
       }),
-      providesTags: (_result, _err, parentId) => [{ type: 'FileList' as const, id: parentId ?? 'root' }]
+      providesTags: (_result, _err, parentId) => [
+        { type: 'User' as const },
+        { type: 'FileList' as const, id: parentId ?? 'root' }
+      ]
     }),
   })
 })
