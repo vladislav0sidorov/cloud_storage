@@ -9,7 +9,7 @@ const uploadFile = rtkApi.injectEndpoints({
         method: 'POST',
         body: formData
       }),
-      invalidatesTags: () => [{ type: 'FileList' as const }]
+      invalidatesTags: () => [{ type: 'FileList' }]
     })
   })
 })

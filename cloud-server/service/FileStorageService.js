@@ -9,6 +9,16 @@ import { STORAGE_LIMIT_BYTES } from '../constants/storage.js'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const UPLOADS_DIR = path.join(__dirname, '..', 'uploads')
 
+function decodeUtf8FileNameIfMojibake(name) {
+  if (!name || typeof name !== 'string') return name || ''
+  if (!/\u00D0|\u00D1/.test(name)) return name
+  try {
+    return Buffer.from(name, 'latin1').toString('utf8')
+  } catch {
+    return name
+  }
+}
+
 class FileStorageService {
   async getUsedSize(userId) {
     const userObjectId = userId instanceof mongoose.Types.ObjectId ? userId : new mongoose.Types.ObjectId(userId)
@@ -19,12 +29,35 @@ class FileStorageService {
     return result[0]?.total ?? 0
   }
 
+  /**
+   * Возвращает путь от корня до папки (breadcrumbs): [{ id: null, name: 'Корень' }, { id, name }, ...].
+   * Если folderId пустой или папка не найдена — возвращает только корень.
+   */
+  async getPath(userId, folderId) {
+    const root = [{ id: null, name: 'Корень' }]
+    if (!folderId) return root
+
+    const folderObjectId = folderId instanceof mongoose.Types.ObjectId ? folderId : new mongoose.Types.ObjectId(folderId)
+    const folder = await FileModel.findOne({ _id: folderObjectId, userId }).lean()
+    if (!folder || !folder.isFolder) return root
+
+    const path = []
+    let current = folder
+    while (current) {
+      path.push({ id: current._id.toString(), name: decodeUtf8FileNameIfMojibake(current.name) })
+      if (!current.parentId) break
+      current = await FileModel.findOne({ _id: current.parentId, userId }).lean()
+    }
+    path.reverse()
+    return [{ id: null, name: 'Корень' }, ...path]
+  }
+
   async list(userId, parentId = null) {
     const query = { userId, parentId: parentId || null }
     const items = await FileModel.find(query).sort({ isFolder: -1, name: 1 }).lean()
     const mapped = items.map(({ _id, name, path: filePath, size, isFolder, parentId, userId: uid, mimeType, createdAt }) => ({
       id: _id.toString(),
-      name,
+      name: decodeUtf8FileNameIfMojibake(name),
       path: filePath,
       size,
       isFolder,
@@ -97,8 +130,9 @@ class FileStorageService {
     const userDir = path.join(UPLOADS_DIR, userId.toString())
     await fs.mkdir(userDir, { recursive: true })
 
-    const ext = path.extname(file.originalname) || ''
-    const baseName = path.basename(file.originalname, ext)
+    const originalName = decodeUtf8FileNameIfMojibake(file.originalname)
+    const ext = path.extname(originalName) || ''
+    const baseName = path.basename(originalName, ext)
     const safeName = `${baseName}${ext}`.replace(/[^a-zA-Z0-9._-]/g, '_') || 'file'
     const destFileName = `${Date.now()}_${safeName}`
     const destPath = path.join(userDir, destFileName)
@@ -106,7 +140,7 @@ class FileStorageService {
     await fs.rename(file.path, destPath)
 
     const doc = await FileModel.create({
-      name: file.originalname,
+      name: originalName,
       path: destPath,
       size: file.size,
       isFolder: false,
@@ -184,7 +218,7 @@ class FileStorageService {
     const file = await FileModel.findOne({ _id: fileId, userId })
     if (!file) return null
     if (file.isFolder) return null
-    return file
+    return { path: file.path, name: decodeUtf8FileNameIfMojibake(file.name) }
   }
 
   /**

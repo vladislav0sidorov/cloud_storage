@@ -2,11 +2,12 @@
 // import { ForbiddenPage } from '@/pages/ForbiddenPage'
 import { LoginPage } from '@/pages/LoginPage'
 import { AppRoutesProps } from '@/shared/types/router'
-import { AppRoutes, getRouteLogin, getRouteMain, getRouteProfile, getRouteRegister } from '@/shared/consts/router'
+import { AppRoutes, getRouteFileStoragePath, getRouteLogin, getRouteMain, getRouteProfile, getRouteRegister } from '@/shared/consts/router'
 import { MainPage } from '@/pages/MainPage'
 import { ProfilePage } from '@/pages/ProfilePage'
 import { RegisterPage } from '@/pages/RegisterPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
+import { FileStoragePage } from '@/pages/FileStoragePage'
 
 export const routeConfig: Record<AppRoutes, AppRoutesProps> = {
   [AppRoutes.LOGIN]: {
@@ -20,6 +21,11 @@ export const routeConfig: Record<AppRoutes, AppRoutesProps> = {
   [AppRoutes.MAIN]: {
     path: getRouteMain(),
     element: <MainPage />,
+    authOnly: true
+  },
+  [AppRoutes.FILE_STORAGE]: {
+    path: getRouteFileStoragePath(),
+    element: <FileStoragePage />,
     authOnly: true
   },
   [AppRoutes.PROFILE]: {

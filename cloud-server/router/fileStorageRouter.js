@@ -17,6 +17,7 @@ const controller = new FileStorageController()
 const router = Router()
 
 router.get('/', authMiddleware, controller.list)
+router.get('/path', authMiddleware, controller.getPath)
 
 router.post(
   '/folder',

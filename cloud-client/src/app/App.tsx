@@ -1,5 +1,6 @@
 import { FC, Suspense, useLayoutEffect } from 'react'
 import { AppRouter } from './providers/router/ui/AppRouter'
+import { ErrorBoundary } from './providers/ErrorBoundary'
 import { getUserAuthData, getUserInited, useCheckAuth, userActions } from '@/entities/User'
 import { USER_LOCALSTORAGE_KEY } from '@/shared/consts/localStorage'
 import { useSelector } from 'react-redux'
@@ -32,11 +33,13 @@ export const App: FC = () => {
   }
 
   return (
-    <NotificationContext.Provider value={api}>
-      {contextHolder}
-      <Suspense fallback={<PageLoader />}>
-        <MainLayout sidebar={auth && <Sidebar />} content={<AppRouter />} />
-      </Suspense>
-    </NotificationContext.Provider>
+    <ErrorBoundary>
+      <NotificationContext.Provider value={api}>
+        {contextHolder}
+        <Suspense fallback={<PageLoader />}>
+          <MainLayout sidebar={auth && <Sidebar />} content={<AppRouter />} />
+        </Suspense>
+      </NotificationContext.Provider>
+    </ErrorBoundary>
   )
 }

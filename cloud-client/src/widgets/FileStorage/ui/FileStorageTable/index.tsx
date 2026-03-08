@@ -1,4 +1,4 @@
-import { fileStorageActions, FileStorageBreadcrumb, IFileItem, useGetFileListQuery, useLazyGetFileDownloadUrlQuery } from '@/entities/File'
+import { fileStorageActions, IFileItem, useGetFileListQuery, useLazyGetFileDownloadUrlQuery } from '@/entities/File'
 import { DeleteFileButton } from '@/features/DeleteFile'
 import { MoveFileButton } from '@/features/MoveFile'
 import { formatBytes } from '@/shared/lib/format/formatBytes'
@@ -8,6 +8,8 @@ import Table, { ColumnsType } from 'antd/es/table'
 import { FC, useEffect } from 'react'
 import { useDispatch } from 'react-redux'
 import { ImageThumbnail } from './ui/ImageThumbnail'
+import { useNavigate } from 'react-router-dom'
+import { getRouteFileStorage } from '@/shared/consts/router'
 
 const IMAGE_MIME_PREFIX = 'image/'
 const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.svg']
@@ -21,15 +23,15 @@ function isImageFile(record: IFileItem): boolean {
 
 interface FileStorageTableProps {
   items: IFileItem[]
-  breadcrumbs: FileStorageBreadcrumb[]
   currentParentId: string | null
 }
 
 export const FileStorageTable: FC<FileStorageTableProps> = props => {
-  const { items, breadcrumbs, currentParentId } = props
+  const { items, currentParentId } = props
+  const navigate = useNavigate()
   const dispatch = useDispatch()
 
-  const { data, isLoading } = useGetFileListQuery(currentParentId)
+  const { data, isLoading, isFetching } = useGetFileListQuery(currentParentId)
   const [triggerDownload, { isLoading: isDownloading }] = useLazyGetFileDownloadUrlQuery()
 
   useEffect(() => {
@@ -51,12 +53,7 @@ export const FileStorageTable: FC<FileStorageTableProps> = props => {
   }
 
   const openFolder = (folder: IFileItem) => {
-    dispatch(
-      fileStorageActions.setNavigation({
-        currentParentId: folder.id,
-        breadcrumbs: [...breadcrumbs, { id: folder.id, name: folder.name }]
-      })
-    )
+    navigate(getRouteFileStorage(folder.id))
   }
   const columns: ColumnsType<IFileItem> = [
     {
@@ -117,7 +114,7 @@ export const FileStorageTable: FC<FileStorageTableProps> = props => {
       rowKey="id"
       columns={columns}
       dataSource={items}
-      loading={isLoading}
+      loading={isLoading || isFetching}
       pagination={false}
       size="small"
       locale={{ emptyText: 'Здесь пока ничего нет. Создайте папку или загрузите файл.' }}

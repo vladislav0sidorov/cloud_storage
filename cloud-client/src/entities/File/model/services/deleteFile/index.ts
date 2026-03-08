@@ -7,7 +7,7 @@ const deleteFile = rtkApi.injectEndpoints({
         url: `/files/${id}`,
         method: 'DELETE'
       }),
-      invalidatesTags: () => [{ type: 'FileList' as const }]
+        invalidatesTags: () => [{ type: 'FileList' }]
     })
   })
 })

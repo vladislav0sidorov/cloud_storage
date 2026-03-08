@@ -9,7 +9,7 @@ const moveFile = rtkApi.injectEndpoints({
         method: 'PATCH',
         body: { parentId }
       }),
-      invalidatesTags: () => [{ type: 'FileList' as const }]
+      invalidatesTags: () => [{ type: 'FileList' }]
     })
   })
 })

@@ -34,7 +34,13 @@ export const fileStorageSlice = createSlice({
     ) => {
       state.currentParentId = action.payload.currentParentId
       state.breadcrumbs = action.payload.breadcrumbs
-    }
+    },
+    reset: () => ({
+      items: [],
+      used: 0,
+      currentParentId: null,
+      breadcrumbs: [{ id: null, name: 'Корень' }]
+    })
   }
 })
 

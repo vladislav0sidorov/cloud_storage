@@ -5,7 +5,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { NAVIGATION_ITEMS } from './config/navigationItems'
 
 const ICONS: Record<(typeof NAVIGATION_ITEMS)[number]['id'], React.ReactNode> = {
-  home: <CloudOutlined />,
+  'file-storage': <CloudOutlined />,
   profile: <UserOutlined />
 }
 

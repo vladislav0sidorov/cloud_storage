@@ -1,9 +1,9 @@
-import { getRouteMain, getRouteProfile } from '@/shared/consts/router'
+import { getRouteFileStorage, getRouteProfile } from '@/shared/consts/router'
 
 export const NAVIGATION_ITEMS = [
   {
-    id: 'home',
-    path: getRouteMain(),
+    id: 'file-storage',
+    path: getRouteFileStorage(),
     label: 'Мое облако',
   },
   {

@@ -9,8 +9,14 @@ import { useSelector } from 'react-redux'
 import { FileStorageBreadcrumbs } from './FileStorageBreadcrumbs'
 import { FileStorageTable } from './FileStorageTable'
 
-export const FileStorage: FC = () => {
-  const { items, used, currentParentId, breadcrumbs } = useSelector(getFileStorage)
+interface FileStorageProps {
+  folderId: string | null
+}
+
+export const FileStorage: FC<FileStorageProps> = props => {
+  const { folderId } = props
+
+  const { items, used } = useSelector(getFileStorage)
   const [uploadFile] = useUploadFileMutation()
   const notificationApi = useNotificationApi()
   const [isDragging, setIsDragging] = useState(false)
@@ -32,14 +38,19 @@ export const FileStorage: FC = () => {
       e.preventDefault()
       e.stopPropagation()
       setIsDragging(false)
+
       const files = Array.from(e.dataTransfer.files)
+
       if (!files.length) return
+
       let ok = 0
       let err = 0
+
       for (const file of files) {
         const formData = new FormData()
+
         formData.append('file', file)
-        if (currentParentId != null) formData.append('parentId', currentParentId)
+        if (folderId != null) formData.append('parentId', folderId)
         try {
           await uploadFile(formData).unwrap()
           ok += 1
@@ -47,10 +58,11 @@ export const FileStorage: FC = () => {
           err += 1
         }
       }
+
       if (ok) notificationApi.success({ message: `Загружено файлов: ${ok}` })
       if (err) notificationApi.error({ message: `Не удалось загрузить: ${err}` })
     },
-    [currentParentId, uploadFile, notificationApi]
+    [folderId, uploadFile, notificationApi]
   )
 
   return (
@@ -66,11 +78,11 @@ export const FileStorage: FC = () => {
           borderRadius: 8
         }}
       >
-        <FileStorageBreadcrumbs breadcrumbs={breadcrumbs} />
+        <FileStorageBreadcrumbs currentParentId={folderId} />
 
         <Space size="middle">
-          <CreateFolderButton parentId={currentParentId} />
-          <UploadFileButton parentId={currentParentId} />
+          <CreateFolderButton parentId={folderId} />
+          <UploadFileButton parentId={folderId} />
         </Space>
       </Flex>
       <Typography.Text type="secondary">
@@ -110,7 +122,7 @@ export const FileStorage: FC = () => {
             </Typography.Text>
           </div>
         )}
-        <FileStorageTable items={items} breadcrumbs={breadcrumbs} currentParentId={currentParentId} />
+        <FileStorageTable items={items} currentParentId={folderId} />
       </div>
     </Flex>
   )

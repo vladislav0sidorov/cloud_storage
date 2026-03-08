@@ -25,7 +25,14 @@ export function createReduxStore(initialState?: StateSchema, asyncReducers?: Red
     devTools: true,
     preloadedState: initialState,
     middleware: (getDefaultMiddleware) =>
-      getDefaultMiddleware().concat(rtkApi.middleware),
+      getDefaultMiddleware({
+        serializableCheck: {
+          ignoredPaths: [rtkApi.reducerPath],
+          ignoredActions: [
+            `${rtkApi.reducerPath}/executeQuery/fulfilled`
+          ]
+        }
+      }).concat(rtkApi.middleware),
   })
 
   // @ts-ignore

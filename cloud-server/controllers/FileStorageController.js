@@ -15,6 +15,17 @@ export default class FileStorageController {
     }
   }
 
+  async getPath(req, res, next) {
+    try {
+      const userId = req.user.userId
+      const folderId = req.query.folderId || null
+      const breadcrumbs = await FileStorageService.getPath(userId, folderId)
+      return res.json({ breadcrumbs })
+    } catch (error) {
+      next(error)
+    }
+  }
+
   async createFolder(req, res, next) {
     try {
       const errors = validationResult(req)

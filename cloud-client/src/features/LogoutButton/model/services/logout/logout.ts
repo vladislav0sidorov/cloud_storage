@@ -1,3 +1,4 @@
+import { fileStorageActions } from "@/entities/File";
 import { userActions } from "@/entities/User";
 import { rtkApi } from "@/shared/api/rtkApi";
 
@@ -11,6 +12,8 @@ const logout = rtkApi.injectEndpoints({
       async onQueryStarted(_, { dispatch }) {
         try {
           dispatch(userActions.logout())
+          dispatch(rtkApi.util.resetApiState())
+          dispatch(fileStorageActions.reset())
         } catch (error) {
           console.error("Logout error:", error)
         }

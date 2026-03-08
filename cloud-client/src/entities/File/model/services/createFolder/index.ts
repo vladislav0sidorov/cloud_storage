@@ -9,7 +9,7 @@ const createFolder = rtkApi.injectEndpoints({
         method: 'POST',
         body
       }),
-      invalidatesTags: () => [{ type: 'FileList' as const }]
+      invalidatesTags: () => [{ type: 'FileList' }]
     })
   })
 })

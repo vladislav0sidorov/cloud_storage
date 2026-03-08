@@ -3,6 +3,7 @@ export type { IFileStorageSchema, FileStorageBreadcrumb } from './model/slice/fi
 
 export { fileStorageActions, fileStorageReducer } from './model/slice/fileStorageSlice'
 export { useGetFileListQuery } from './model/services/getFileList'
+export { useGetFileBreadcrumbsQuery } from './model/services/getFileBreadcrumbs'
 export { useCreateFolderMutation } from './model/services/createFolder'
 export { useUploadFileMutation } from './model/services/uploadFile'
 export { useMoveFileMutation } from './model/services/moveFile'
