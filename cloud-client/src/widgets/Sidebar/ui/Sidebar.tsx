@@ -3,17 +3,21 @@ import { FC } from 'react'
 import cls from './Sidebar.module.css'
 import { LogoutButton } from '@/features/LogoutButton'
 import { SidebarNavigationList } from './SidebarNavigationList/SidebarNavigation'
+import { Link } from 'react-router-dom'
+import { getRouteMain } from '@/shared/consts/router'
 
 export const Sidebar: FC = () => {
   return (
     <aside className={cls.sidebar}>
       <div className={cls.header}>
-        <div className={cls.logo}>
-          <div className={cls.logoIcon}>
-            <CloudOutlined />
+        <Link to={getRouteMain()}>
+          <div className={cls.logo}>
+            <div className={cls.logoIcon}>
+              <CloudOutlined />
+            </div>
+            Cloud storage
           </div>
-          Cloud storage
-        </div>
+        </Link>
       </div>
       <div className={cls.navWrap}>
         <SidebarNavigationList />
