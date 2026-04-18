@@ -1,0 +1,49 @@
+# Запуск: cloud-server/.env — секреты, SMTP и т.д.; MongoDB поднимается сервисом mongo ниже.
+# Фронт собирается с VITE_* — с браузера должны быть доступны те же хост/порт, что в args.
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
+
+  api:
+    build: ./cloud-server
+    ports:
+      - "4000:4000"
+    env_file:
+      - ./cloud-server/.env
+    environment:
+      # Перекрываем .env: в Docker SPA на порту 80, не :3000 (иначе CORS)
+      CLIENT_URL: ${DOCKER_CLIENT_URL:-http://localhost}
+      # БД внутри compose (хост mongo — имя сервиса); перекрывает MONGODB_URI из .env для Atlas
+      MONGODB_URI: mongodb://mongo:27017/cloud_storage
+    volumes:
+      - uploads_data:/app/uploads
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ./cloud-client
+      args:
+        # С браузера: фронт на :80, API на :4000
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:4000/api}
+        VITE_WS_URL: ${VITE_WS_URL:-ws://localhost:4000}
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+
+volumes:
+  uploads_data:
+  mongo_data:
