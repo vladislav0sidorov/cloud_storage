@@ -137,6 +137,7 @@ ssh-copy-id -i ~/.ssh/gh_actions_deploy.pub -p ВАШ_SSH_ПОРТ root@ВАШ_I
 | `VPS_PORT` | `13882` |
 | `VPS_USER` | `root` |
 | `VPS_DEPLOY_PATH` | `/opt/cloud_storage/deploy` |
+| **`CLIENT_URL`** | Публичный URL фронта (например `http://IP` или `https://домен`) — **обязательно** для деплоя: workflow передаёт его на сервер перед `docker compose`, иначе в логах предупреждения и неверная подстановка образов. |
 
 **Секреты в этом же Environment:**
 

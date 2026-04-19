@@ -156,17 +156,40 @@ jobs:
       GHCR_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
       GHCR_USER: ${{ github.actor }}
     steps:
+      - name: Подготовить SSH-ключ (файл + проверка формата)
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+        run: |
+          KEY_FILE="/tmp/gha_deploy.pem"
+          if [ -z "${SSH_PRIVATE_KEY}" ]; then
+            echo "::error::Секрет VPS_SSH_PRIVATE_KEY пустой (Environment или репозиторий)."
+            exit 1
+          fi
+          printf '%s\n' "$SSH_PRIVATE_KEY" > "$KEY_FILE"
+          tr -d '\r' < "$KEY_FILE" > "${KEY_FILE}.tmp" && mv "${KEY_FILE}.tmp" "$KEY_FILE"
+          chmod 600 "$KEY_FILE"
+          if ! grep -qE 'BEGIN (OPENSSH|EC|RSA) PRIVATE KEY' "$KEY_FILE"; then
+            echo "::error::В секрете нет блока BEGIN … PRIVATE KEY."
+            exit 1
+          fi
+
+      - name: Переменные для docker compose на сервере (GHCR / CORS)
+        run: |
+          echo "GHCR_PREFIX=ghcr.io/$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_ENV"
+          echo "CLIENT_URL=${{ vars.CLIENT_URL }}" >> "$GITHUB_ENV"
+
       - name: SSH — pull & up
         uses: appleboy/ssh-action@v1.2.5
         with:
           host: ${{ vars.VPS_HOST }}
           username: ${{ vars.VPS_USER || 'root' }}
-          key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+          key_path: /tmp/gha_deploy.pem
           port: ${{ vars.VPS_PORT || '22' }}
-          envs: GHCR_TOKEN,GHCR_USER
-          script_stop: true
+          envs: GHCR_TOKEN,GHCR_USER,GHCR_PREFIX,CLIENT_URL
           script: |
             set -euo pipefail
+            export GHCR_PREFIX
+            export CLIENT_URL
             if [ -n "${GHCR_TOKEN:-}" ]; then
               echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
             fi
