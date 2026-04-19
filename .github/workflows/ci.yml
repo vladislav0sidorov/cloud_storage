@@ -143,12 +143,15 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  # Автодеплой на VPS после публикации образов (включается переменной VPS_DEPLOY=true).
+  # Автодеплой на VPS после публикации образов.
+  # Секреты/переменные в GitHub Environment: в РЕПОЗИТОРИИ (Variables) задайте VPS_GITHUB_ENVIRONMENT = точное имя окружения из Settings → Environments.
+  # Условие job if не видит переменные только внутри Environment — поэтому имя окружения задаётся репозиторной переменной; отключить деплой = очистить VPS_GITHUB_ENVIRONMENT.
   deploy-vps:
     name: CD — deploy on VPS
-    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && vars.VPS_DEPLOY == 'true'
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && vars.VPS_GITHUB_ENVIRONMENT != ''
     runs-on: ubuntu-latest
     needs: [push-images]
+    environment: ${{ vars.VPS_GITHUB_ENVIRONMENT }}
     env:
       GHCR_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
       GHCR_USER: ${{ github.actor }}

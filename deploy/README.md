@@ -97,7 +97,9 @@ docker compose logs -f --tail=50 api
 
 ## 8. Автодеплой с GitHub Actions (пересборка образов + обновление на VPS)
 
-После каждого **push в `main`** (или ручного **Run workflow** на `main`) CI публикует образы в GHCR, затем при включённом флаге подключается к VPS по SSH и выполняет `docker compose pull && up -d`.
+После каждого **push в `main`** (или ручного **Run workflow** на `main`) CI публикует образы в GHCR, затем job **«CD — deploy on VPS»** подключается к серверу по SSH и выполняет `docker compose pull && up -d`.
+
+**Важно:** условие `if` у job видит только **переменные репозитория**, а не переменные, заданные **только** внутри GitHub Environment. Поэтому имя окружения задаётся **репозиторной** переменной **`VPS_GITHUB_ENVIRONMENT`** (см. ниже), а `VPS_HOST`, порт и т.д. можно держать в [GitHub Environment](https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment) — они подставятся в шаги job после привязки `environment:`.
 
 ### 8.1. SSH-ключ только для деплоя (на Mac или ПК)
 
@@ -115,24 +117,37 @@ ssh-copy-id -i ~/.ssh/gh_actions_deploy.pub -p ВАШ_SSH_ПОРТ root@ВАШ_I
 
 **Приватный ключ** (`~/.ssh/gh_actions_deploy` без `.pub`) целиком скопируйте в буфер — он пойдёт в секрет GitHub.
 
-### 8.2. Переменные репозитория (Settings → Secrets and variables → Actions → Variables)
+### 8.2. Обязательная переменная репозитория (имя GitHub Environment)
+
+**Settings → Secrets and variables → Actions → Variables** (уровень **репозитория**):
 
 | Имя | Пример | Назначение |
 |-----|--------|------------|
-| `VPS_DEPLOY` | `true` | Включить автодеплой (любое другое значение — job пропускается). |
-| `VPS_HOST` | `79.137.226.78` | IP или домен VPS. |
-| `VPS_PORT` | `13882` | Порт SSH (если пусто — `22`). |
-| `VPS_USER` | `root` | Пользователь SSH (если пусто — `root`). |
-| `VPS_DEPLOY_PATH` | `/opt/cloud_storage/deploy` | Каталог с `docker-compose.yml` и `.env` на сервере. |
+| **`VPS_GITHUB_ENVIRONMENT`** | см. ниже | **Точное** имя окружения из **Settings → Environments** (как в списке). Пока пусто — job деплоя **skipped**. |
 
-Уже должны быть заданы **`VITE_API_URL`** и **`VITE_WS_URL`** для сборки фронта под ваш публичный URL.
+Имя должно **совпадать** с тем, что отображается в списке окружений (например `production`, `github-pages` или своё имя при создании).
 
-### 8.3. Секреты репозитория (Settings → Secrets and variables → Actions → Secrets)
+### 8.3. Переменные и секреты внутри GitHub Environment
+
+В окружении с именем из **`VPS_GITHUB_ENVIRONMENT`** задайте:
+
+| Имя | Пример |
+|-----|--------|
+| `VPS_HOST` | `79.137.226.78` |
+| `VPS_PORT` | `13882` |
+| `VPS_USER` | `root` |
+| `VPS_DEPLOY_PATH` | `/opt/cloud_storage/deploy` |
+
+**Секреты в этом же Environment:**
 
 | Имя | Назначение |
 |-----|------------|
-| `VPS_SSH_PRIVATE_KEY` | Полный текст приватного ключа (включая строки `BEGIN` / `END`). |
-| `GHCR_READ_TOKEN` | Опционально. Classic PAT с **`read:packages`**: для `docker login` на VPS, если образы в GHCR **приватные**. Если пакеты **публичные**, секрет можно не создавать — `pull` без логина. |
+| `VPS_SSH_PRIVATE_KEY` | Полный приватный ключ SSH. |
+| `GHCR_READ_TOKEN` | Опционально: PAT с **`read:packages`**, если образы в GHCR **приватные**. |
+
+**Без GitHub Environment:** продублируйте `VPS_HOST`, порт, путь и секрет ключа в **Variables / Secrets репозитория** и удалите у job `deploy-vps` строку `environment:` в `.github/workflows/ci.yml` (или попросите подстроить workflow под ваш вариант).
+
+Репозиторные **`VITE_API_URL`** и **`VITE_WS_URL`** по-прежнему нужны для сборки фронта.
 
 ### 8.4. Проверка
 
