@@ -1,0 +1,46 @@
+# Продакшен на VPS: образы из GHCR (без исходников на сервере).
+# Скопируйте каталог deploy на VPS, создайте .env рядом (см. env.example), выполните docker compose pull && up.
+#
+# Перед первым запуском: docker login ghcr.io (PAT с read:packages или через GitHub CLI).
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  api:
+    image: ${GHCR_PREFIX}/cloud-server:latest
+    restart: unless-stopped
+    pull_policy: always
+    ports:
+      # Для продакшена за Nginx/Caddy можно заменить на "127.0.0.1:4000:4000" и проксировать /api
+      - "4000:4000"
+    env_file: .env
+    environment:
+      CLIENT_URL: ${CLIENT_URL}
+      MONGODB_URI: ${MONGODB_URI:-mongodb://mongo:27017/cloud_storage}
+    volumes:
+      - uploads_data:/app/uploads
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  web:
+    image: ${GHCR_PREFIX}/cloud-client:latest
+    restart: unless-stopped
+    pull_policy: always
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+
+volumes:
+  mongo_data:
+  uploads_data:

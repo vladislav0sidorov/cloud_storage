@@ -1,5 +1,5 @@
 # CI: линт и сборка клиента, проверка сервера, сборка Docker-образов.
-# CD: при push в main — публикация образов в GitHub Container Registry (GHCR).
+# CD: push или workflow_dispatch на main → образы в GHCR; при VPS_DEPLOY=true → SSH на VPS, pull и up.
 name: CI
 
 on:
@@ -40,8 +40,8 @@ jobs:
 
       - name: Production build
         env:
-          VITE_API_URL: http://localhost:4000/api
-          VITE_WS_URL: ws://localhost:4000
+          VITE_API_URL: ${{ vars.VITE_API_URL || 'http://localhost:4000/api' }}
+          VITE_WS_URL: ${{ vars.VITE_WS_URL || 'ws://localhost:4000' }}
         run: npm run build
 
   server:
@@ -99,7 +99,7 @@ jobs:
 
   push-images:
     name: CD — push images to GHCR
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     needs: [docker]
     permissions:
@@ -137,8 +137,37 @@ jobs:
           context: ./cloud-client
           push: true
           build-args: |
-            VITE_API_URL=http://localhost:4000/api
-            VITE_WS_URL=ws://localhost:4000
+            VITE_API_URL=${{ vars.VITE_API_URL || 'http://localhost:4000/api' }}
+            VITE_WS_URL=${{ vars.VITE_WS_URL || 'ws://localhost:4000' }}
           tags: ${{ steps.ghcr.outputs.prefix }}/cloud-client:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  # Автодеплой на VPS после публикации образов (включается переменной VPS_DEPLOY=true).
+  deploy-vps:
+    name: CD — deploy on VPS
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && vars.VPS_DEPLOY == 'true'
+    runs-on: ubuntu-latest
+    needs: [push-images]
+    env:
+      GHCR_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
+      GHCR_USER: ${{ github.actor }}
+    steps:
+      - name: SSH — pull & up
+        uses: appleboy/ssh-action@v1.2.5
+        with:
+          host: ${{ vars.VPS_HOST }}
+          username: ${{ vars.VPS_USER || 'root' }}
+          key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+          port: ${{ vars.VPS_PORT || '22' }}
+          envs: GHCR_TOKEN,GHCR_USER
+          script_stop: true
+          script: |
+            set -euo pipefail
+            if [ -n "${GHCR_TOKEN:-}" ]; then
+              echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+            fi
+            cd "${{ vars.VPS_DEPLOY_PATH || '/opt/cloud_storage/deploy' }}"
+            docker compose pull
+            docker compose up -d --remove-orphans
+            docker image prune -f
