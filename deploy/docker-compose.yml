@@ -22,10 +22,20 @@ services:
     ports:
       # Для продакшена за Nginx/Caddy можно заменить на "127.0.0.1:4000:4000" и проксировать /api
       - "4000:4000"
-    env_file: .env
+    # Переменные с хоста (export перед docker compose) или из опционального .env рядом с compose
     environment:
-      CLIENT_URL: ${CLIENT_URL}
+      NODE_ENV: production
+      PORT: ${PORT:-4000}
       MONGODB_URI: ${MONGODB_URI:-mongodb://mongo:27017/cloud_storage}
+      API_URL: ${API_URL}
+      CLIENT_URL: ${CLIENT_URL}
+      ACCESS_TOKEN_SECRET: ${ACCESS_TOKEN_SECRET}
+      REFRESH_TOKEN_SECRET: ${REFRESH_TOKEN_SECRET}
+      SKIP_MAIL: ${SKIP_MAIL:-true}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
     volumes:
       - uploads_data:/app/uploads
     depends_on:

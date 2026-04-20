@@ -95,63 +95,25 @@ docker compose logs -f --tail=50 api
 
 Команды бэкапа томов — в документации Docker (`docker run` с `--volumes-from` или бэкап каталога данных через volume inspect).
 
-## 8. Автодеплой с GitHub Actions (пересборка образов + обновление на VPS)
+## 8. Автодеплой с GitHub Actions
 
-После каждого **push в `main`** (или ручного **Run workflow** на `main`) CI публикует образы в GHCR, затем job **«CD — deploy on VPS»** подключается к серверу по SSH и выполняет `docker compose pull && up -d`.
+После **push в `main`** (или **Run workflow**) CI публикует образы в GHCR, затем job **«CD — deploy on VPS»** по SSH выполняет скрипт [`deploy/scripts/remote-docker-deploy.sh`](scripts/remote-docker-deploy.sh) (pull, up, prune).
 
-**Важно:** условие `if` у job видит только **переменные репозитория**, а не переменные, заданные **только** внутри GitHub Environment. Поэтому имя окружения задаётся **репозиторной** переменной **`VPS_GITHUB_ENVIRONMENT`** (см. ниже), а `VPS_HOST`, порт и т.д. можно держать в [GitHub Environment](https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment) — они подставятся в шаги job после привязки `environment:`.
+**Полный список переменных и секретов** — в **[`deploy/docs/GITHUB_ENVIRONMENT.md`](docs/GITHUB_ENVIRONMENT.md)** (один источник правды; список имён для `appleboy envs` в workflow должен с ним совпадать).
 
-### 8.1. SSH-ключ только для деплоя (на Mac или ПК)
+Кратко: в **Variables репозитория** задайте **`VPS_GITHUB_ENVIRONMENT`** — точное имя [GitHub Environment](https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment) (пока пусто — деплой не запускается: условие `if` у job не видит переменные только внутри Environment). В этом окружении — `VPS_HOST`, `VPS_USER`, `VPS_PORT`, `VPS_DEPLOY_PATH`, URL-ы приложения, секрет SSH и JWT и т.д. Репозиторные **`VITE_API_URL`** / **`VITE_WS_URL`** нужны для сборки фронта.
+
+### 8.1. SSH-ключ только для деплоя
 
 ```bash
 ssh-keygen -t ed25519 -f ~/.ssh/gh_actions_deploy -N ""
-```
-
-Публичный ключ добавьте на сервер:
-
-```bash
 ssh-copy-id -i ~/.ssh/gh_actions_deploy.pub -p ВАШ_SSH_ПОРТ root@ВАШ_IP
 ```
 
-Либо вручную: содержимое `.pub` в файл `/root/.ssh/authorized_keys` на VPS.
+Приватный ключ (файл без `.pub`) → секрет **`VPS_SSH_PRIVATE_KEY`** в том же Environment.
 
-**Приватный ключ** (`~/.ssh/gh_actions_deploy` без `.pub`) целиком скопируйте в буфер — он пойдёт в секрет GitHub.
+### 8.2. Проверка
 
-### 8.2. Обязательная переменная репозитория (имя GitHub Environment)
+Push в `main` или **Actions → CI → Run workflow**. В логах деплоя — успешный `docker compose pull` / `up`.
 
-**Settings → Secrets and variables → Actions → Variables** (уровень **репозитория**):
-
-| Имя | Пример | Назначение |
-|-----|--------|------------|
-| **`VPS_GITHUB_ENVIRONMENT`** | см. ниже | **Точное** имя окружения из **Settings → Environments** (как в списке). Пока пусто — job деплоя **skipped**. |
-
-Имя должно **совпадать** с тем, что отображается в списке окружений (например `production`, `github-pages` или своё имя при создании).
-
-### 8.3. Переменные и секреты внутри GitHub Environment
-
-В окружении с именем из **`VPS_GITHUB_ENVIRONMENT`** задайте:
-
-| Имя | Пример |
-|-----|--------|
-| `VPS_HOST` | `79.137.226.78` |
-| `VPS_PORT` | `13882` |
-| `VPS_USER` | `root` |
-| `VPS_DEPLOY_PATH` | `/opt/cloud_storage/deploy` |
-| **`CLIENT_URL`** | Публичный URL фронта (например `http://IP` или `https://домен`) — **обязательно** для деплоя: workflow передаёт его на сервер перед `docker compose`, иначе в логах предупреждения и неверная подстановка образов. |
-
-**Секреты в этом же Environment:**
-
-| Имя | Назначение |
-|-----|------------|
-| `VPS_SSH_PRIVATE_KEY` | Полный приватный ключ SSH. |
-| `GHCR_READ_TOKEN` | Опционально: PAT с **`read:packages`**, если образы в GHCR **приватные**. |
-
-**Без GitHub Environment:** продублируйте `VPS_HOST`, порт, путь и секрет ключа в **Variables / Secrets репозитория** и удалите у job `deploy-vps` строку `environment:` в `.github/workflows/ci.yml` (или попросите подстроить workflow под ваш вариант).
-
-Репозиторные **`VITE_API_URL`** и **`VITE_WS_URL`** по-прежнему нужны для сборки фронта.
-
-### 8.4. Проверка
-
-Сделайте пустой коммит и push в `main` или **Actions → CI → Run workflow** (ветка `main`). В логах job **«CD — deploy on VPS»** должны быть `docker compose pull` и успешный перезапуск контейнеров.
-
-**Безопасность:** не используйте для деплоя тот же ключ, что и для личного входа; ограничьте ключ одной командой в `authorized_keys` (опция `command=` в `authorized_keys`) при желании — это уже настройка на стороне сервера.
+**Безопасность:** отдельный ключ для деплоя, не тот же, что для личного SSH; при желании ограничьте ключ в `authorized_keys` (`command=`).

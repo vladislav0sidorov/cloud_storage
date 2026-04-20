@@ -1,5 +1,5 @@
-# CI: линт и сборка клиента, проверка сервера, сборка Docker-образов.
-# CD: push или workflow_dispatch на main → образы в GHCR; при VPS_DEPLOY=true → SSH на VPS, pull и up.
+# CI: клиент, сервер, compose build; CD: GHCR + деплой на VPS.
+# Переменные деплоя: deploy/docs/GITHUB_ENVIRONMENT.md
 name: CI
 
 on:
@@ -72,22 +72,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # compose ожидает cloud-server/.env (файл в .gitignore)
+      # compose ожидает cloud-server/.env (в .gitignore) — единый шаблон для CI
       - name: Placeholder .env for compose
-        run: |
-          cat > cloud-server/.env << 'EOF'
-          PORT=4000
-          MONGODB_URI=mongodb://mongo:27017/cloud_storage
-          API_URL=http://localhost:4000
-          CLIENT_URL=http://localhost
-          ACCESS_TOKEN_SECRET=ci-placeholder-access-not-for-prod
-          REFRESH_TOKEN_SECRET=ci-placeholder-refresh-not-for-prod
-          SKIP_MAIL=true
-          SMTP_HOST=localhost
-          SMTP_PORT=587
-          SMTP_USER=ci@localhost
-          SMTP_PASSWORD=ci
-          EOF
+        run: cp deploy/ci/placeholder.env cloud-server/.env
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -105,6 +92,8 @@ jobs:
     permissions:
       contents: read
       packages: write
+    outputs:
+      ghcr_prefix: ${{ steps.ghcr.outputs.prefix }}
     steps:
       - uses: actions/checkout@v4
 
@@ -143,9 +132,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  # Автодеплой на VPS после публикации образов.
-  # Секреты/переменные в GitHub Environment: в РЕПОЗИТОРИИ (Variables) задайте VPS_GITHUB_ENVIRONMENT = точное имя окружения из Settings → Environments.
-  # Условие job if не видит переменные только внутри Environment — поэтому имя окружения задаётся репозиторной переменной; отключить деплой = очистить VPS_GITHUB_ENVIRONMENT.
+  # Автодеплой: список имён для appleboy envs = deploy/docs/GITHUB_ENVIRONMENT.md
   deploy-vps:
     name: CD — deploy on VPS
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && vars.VPS_GITHUB_ENVIRONMENT != ''
@@ -155,8 +142,29 @@ jobs:
     env:
       GHCR_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
       GHCR_USER: ${{ github.actor }}
+      # Ниже — в Environment/репозитории; на VPS .env не обязателен, compose читает export из SSH-сессии
+      PORT: ${{ vars.DEPLOY_PORT || '4000' }}
+      API_URL: ${{ vars.API_URL }}
+      CLIENT_URL: ${{ vars.CLIENT_URL }}
+      MONGODB_URI: ${{ secrets.MONGODB_URI }}
+      ACCESS_TOKEN_SECRET: ${{ secrets.ACCESS_TOKEN_SECRET }}
+      REFRESH_TOKEN_SECRET: ${{ secrets.REFRESH_TOKEN_SECRET }}
+      SKIP_MAIL: ${{ vars.SKIP_MAIL || 'true' }}
+      SMTP_HOST: ${{ vars.SMTP_HOST }}
+      SMTP_PORT: ${{ vars.SMTP_PORT || '587' }}
+      SMTP_USER: ${{ vars.SMTP_USER }}
+      SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+      DEPLOY_PATH: ${{ vars.VPS_DEPLOY_PATH || '/opt/cloud_storage/deploy' }}
     steps:
-      - name: Подготовить SSH-ключ (файл + проверка формата)
+      - uses: actions/checkout@v4
+
+      - name: Sync GHCR prefix from image job
+        run: echo "GHCR_PREFIX=${{ needs.push-images.outputs.ghcr_prefix }}" >> "$GITHUB_ENV"
+
+      - name: Make deploy script executable
+        run: chmod +x deploy/scripts/remote-docker-deploy.sh
+
+      - name: Prepare SSH key (file + format validation)
         env:
           SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
         run: |
@@ -173,11 +181,6 @@ jobs:
             exit 1
           fi
 
-      - name: Переменные для docker compose на сервере (GHCR / CORS)
-        run: |
-          echo "GHCR_PREFIX=ghcr.io/$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_ENV"
-          echo "CLIENT_URL=${{ vars.CLIENT_URL }}" >> "$GITHUB_ENV"
-
       - name: SSH — pull & up
         uses: appleboy/ssh-action@v1.2.5
         with:
@@ -185,15 +188,5 @@ jobs:
           username: ${{ vars.VPS_USER || 'root' }}
           key_path: /tmp/gha_deploy.pem
           port: ${{ vars.VPS_PORT || '22' }}
-          envs: GHCR_TOKEN,GHCR_USER,GHCR_PREFIX,CLIENT_URL
-          script: |
-            set -euo pipefail
-            export GHCR_PREFIX
-            export CLIENT_URL
-            if [ -n "${GHCR_TOKEN:-}" ]; then
-              echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
-            fi
-            cd "${{ vars.VPS_DEPLOY_PATH || '/opt/cloud_storage/deploy' }}"
-            docker compose pull
-            docker compose up -d --remove-orphans
-            docker image prune -f
+          envs: GHCR_TOKEN,GHCR_USER,GHCR_PREFIX,PORT,API_URL,CLIENT_URL,MONGODB_URI,ACCESS_TOKEN_SECRET,REFRESH_TOKEN_SECRET,SKIP_MAIL,SMTP_HOST,SMTP_PORT,SMTP_USER,SMTP_PASSWORD,DEPLOY_PATH
+          script_path: deploy/scripts/remote-docker-deploy.sh
