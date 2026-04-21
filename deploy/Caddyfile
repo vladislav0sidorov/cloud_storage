@@ -1,0 +1,25 @@
+{
+	# Email для Let's Encrypt (по желанию, но рекомендуется).
+	# Можно переопределить переменной окружения CADDY_EMAIL на сервере.
+	email {$CADDY_EMAIL}
+}
+
+{$DOMAIN} {
+	encode zstd gzip
+
+	# API: все запросы /api/* → в контейнер api (Express на 4000)
+	handle_path /api/* {
+		reverse_proxy api:4000
+	}
+
+	# WebSocket (если используется): проксируем как есть
+	@ws {
+		header Connection *Upgrade*
+		header Upgrade websocket
+	}
+	reverse_proxy @ws api:4000
+
+	# Frontend: всё остальное → nginx контейнер web
+	reverse_proxy web:80
+}
+

@@ -4,7 +4,7 @@ export const NAVIGATION_ITEMS = [
   {
     id: 'file-storage',
     path: getRouteFileStorage(),
-    label: 'Мое облако Обновлено',
+    label: 'Мое облако',
   },
   {
     id: 'profile',

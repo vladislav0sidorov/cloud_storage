@@ -3,6 +3,20 @@
 #
 # Перед первым запуском: docker login ghcr.io (PAT с read:packages или через GitHub CLI).
 services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - web
+      - api
+
   mongo:
     image: mongo:7
     restart: unless-stopped
@@ -20,8 +34,8 @@ services:
     restart: unless-stopped
     pull_policy: always
     ports:
-      # Для продакшена за Nginx/Caddy можно заменить на "127.0.0.1:4000:4000" и проксировать /api
-      - "4000:4000"
+      # Порт наружу не публикуем: доступ к API только через Caddy (reverse_proxy /api/*)
+      - "127.0.0.1:4000:4000"
     # Переменные с хоста (export перед docker compose) или из опционального .env рядом с compose
     environment:
       NODE_ENV: production
@@ -46,11 +60,11 @@ services:
     image: ${GHCR_PREFIX}/cloud-client:latest
     restart: unless-stopped
     pull_policy: always
-    ports:
-      - "80:80"
     depends_on:
       - api
 
 volumes:
   mongo_data:
   uploads_data:
+  caddy_data:
+  caddy_config:

@@ -41,12 +41,11 @@ sudo ufw allow OpenSSH
 sudo ufw allow 13882/tcp
 ```
 
-Затем HTTP/HTTPS и API:
+Затем HTTP/HTTPS (API будет доступен через reverse proxy, порт 4000 наружу не нужен):
 
 ```bash
 sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
-sudo ufw allow 4000/tcp
 sudo ufw enable
 ```
 
@@ -83,10 +82,22 @@ docker compose logs -f --tail=50 api
 
 Откройте в браузере: `http://IP_СЕРВЕРА` или ваш домен.
 
-## 6. Домен и HTTPS (по желанию)
+## 6. Домен и HTTPS (Caddy, рекомендуется)
 
-- В DNS у регистратора: запись **A** на IP VPS.
-- Поставьте **Caddy** или **Nginx** + **Certbot**, проксируйте на `127.0.0.1:80` и при необходимости на API; обновите `CLIENT_URL`, `VITE_*`, пересоберите образ web в CI.
+- В DNS у регистратора: запись **A** для домена (например `example.com`) на IP VPS.
+- В `deploy/.env` задайте:
+  - `DOMAIN=ваш-домен`
+  - `CLIENT_URL=https://ваш-домен`
+  - `API_URL=https://ваш-домен`
+  - (опционально) `CADDY_EMAIL=you@example.com`
+- В GitHub repo variables (для сборки фронта) обновите:
+  - `VITE_API_URL=https://ваш-домен/api`
+  - `VITE_WS_URL=wss://ваш-домен`
+- Поднимите стэк (`docker compose up -d`). Caddy автоматически выпустит сертификат Let's Encrypt и будет проксировать:
+  - `/api/*` → сервис `api`
+  - всё остальное → сервис `web`
+
+После этого порт `4000` не публикуется наружу.
 
 ## 7. Резервное копирование
 
