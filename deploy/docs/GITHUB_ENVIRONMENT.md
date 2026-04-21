@@ -27,6 +27,8 @@
 |-----|-----|------------|
 | `CLIENT_URL` | Variable | URL фронта (CORS). |
 | `API_URL` | Variable | Публичный URL API (письма, редиректы). |
+| `DOMAIN` | Variable | Домен для Caddy/Let's Encrypt (например `oblako-storage.ru`). |
+| `CADDY_EMAIL` | Variable | Email для уведомлений Let's Encrypt (опционально). |
 | `DEPLOY_PORT` | Variable | По умолчанию в workflow: `4000`. |
 | `ACCESS_TOKEN_SECRET` | **Secret** | JWT access. |
 | `REFRESH_TOKEN_SECRET` | **Secret** | JWT refresh. |
@@ -47,5 +49,5 @@
 
 ## Связь с кодом workflow
 
-- Список имён в **`envs`** job `deploy-vps` в `.github/workflows/ci.yml` должен совпадать с переменными, которые читает **`deploy/scripts/remote-docker-deploy.sh`** (сейчас: `GHCR_TOKEN`, `GHCR_USER`, `GHCR_PREFIX`, `PORT`, `API_URL`, `CLIENT_URL`, `MONGODB_URI`, `ACCESS_TOKEN_SECRET`, `REFRESH_TOKEN_SECRET`, `SKIP_MAIL`, `SMTP_*`, `DEPLOY_PATH`).
+- Список имён в **`envs`** job `deploy-vps` в `.github/workflows/ci.yml` должен совпадать с переменными, которые читает **`deploy/scripts/remote-docker-deploy.sh`** (сейчас: `GHCR_TOKEN`, `GHCR_USER`, `GHCR_PREFIX`, `PORT`, `API_URL`, `CLIENT_URL`, `MONGODB_URI`, `ACCESS_TOKEN_SECRET`, `REFRESH_TOKEN_SECRET`, `SKIP_MAIL`, `SMTP_*`, `DOMAIN`, `CADDY_EMAIL`, `DEPLOY_PATH`).
 - Префикс образов **`GHCR_PREFIX`** в деплое берётся из **`needs.push-images.outputs.ghcr_prefix`**, а не вычисляется второй раз в том же pipeline.

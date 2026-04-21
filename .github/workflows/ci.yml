@@ -154,6 +154,8 @@ jobs:
       SMTP_PORT: ${{ vars.SMTP_PORT || '587' }}
       SMTP_USER: ${{ vars.SMTP_USER }}
       SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+      DOMAIN: ${{ vars.DOMAIN }}
+      CADDY_EMAIL: ${{ vars.CADDY_EMAIL }}
       DEPLOY_PATH: ${{ vars.VPS_DEPLOY_PATH || '/opt/cloud_storage/deploy' }}
     steps:
       - uses: actions/checkout@v4
@@ -188,5 +190,5 @@ jobs:
           username: ${{ vars.VPS_USER || 'root' }}
           key_path: /tmp/gha_deploy.pem
           port: ${{ vars.VPS_PORT || '22' }}
-          envs: GHCR_TOKEN,GHCR_USER,GHCR_PREFIX,PORT,API_URL,CLIENT_URL,MONGODB_URI,ACCESS_TOKEN_SECRET,REFRESH_TOKEN_SECRET,SKIP_MAIL,SMTP_HOST,SMTP_PORT,SMTP_USER,SMTP_PASSWORD,DEPLOY_PATH
+          envs: GHCR_TOKEN,GHCR_USER,GHCR_PREFIX,PORT,API_URL,CLIENT_URL,MONGODB_URI,ACCESS_TOKEN_SECRET,REFRESH_TOKEN_SECRET,SKIP_MAIL,SMTP_HOST,SMTP_PORT,SMTP_USER,SMTP_PASSWORD,DOMAIN,CADDY_EMAIL,DEPLOY_PATH
           script_path: deploy/scripts/remote-docker-deploy.sh
