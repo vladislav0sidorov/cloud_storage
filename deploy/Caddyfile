@@ -1,20 +1,13 @@
 {$DOMAIN} {
 	encode zstd gzip
-
-	# API: все запросы /api/* → в контейнер api (Express на 4000)
-	# Важно: сохраняем префикс /api, т.к. backend роуты ожидают /api/...
-	handle /api/* {
-		reverse_proxy api:4000
+	route {
+		@api path /api/*
+		reverse_proxy @api api:4000
+		@ws {
+			header Connection *Upgrade*
+			header Upgrade websocket
+		}
+		reverse_proxy @ws api:4000
+		reverse_proxy web:80
 	}
-
-	# WebSocket (если используется): проксируем как есть
-	@ws {
-		header Connection *Upgrade*
-		header Upgrade websocket
-	}
-	reverse_proxy @ws api:4000
-
-	# Frontend: всё остальное → nginx контейнер web
-	reverse_proxy web:80
 }
-
