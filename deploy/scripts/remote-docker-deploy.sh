@@ -17,11 +17,29 @@ export MONGODB_URI="${MONGODB_URI:-mongodb://mongo:27017/cloud_storage}"
 
 DEPLOY_PATH="${DEPLOY_PATH:-/opt/cloud_storage/deploy}"
 
+required_vars=(
+  GHCR_PREFIX
+  PORT
+  API_URL
+  CLIENT_URL
+  ACCESS_TOKEN_SECRET
+  REFRESH_TOKEN_SECRET
+  DOMAIN
+)
+
+for var_name in "${required_vars[@]}"; do
+  if [[ -z "${!var_name:-}" ]]; then
+    echo "ERROR: required variable '$var_name' is empty"
+    exit 1
+  fi
+done
+
 if [[ -n "${GHCR_TOKEN:-}" ]]; then
   echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
 fi
 
 cd "$DEPLOY_PATH"
+docker compose config >/dev/null
 docker compose pull
 docker compose up -d --remove-orphans
 docker image prune -f
