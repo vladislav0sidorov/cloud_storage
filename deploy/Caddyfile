@@ -2,7 +2,8 @@
 	encode zstd gzip
 
 	# API: все запросы /api/* → в контейнер api (Express на 4000)
-	handle_path /api/* {
+	# Важно: сохраняем префикс /api, т.к. backend роуты ожидают /api/...
+	handle /api/* {
 		reverse_proxy api:4000
 	}
 
