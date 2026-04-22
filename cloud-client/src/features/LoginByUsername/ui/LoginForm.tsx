@@ -21,8 +21,8 @@ export const LoginForm: FC = () => {
   const [loginByUsernameMutation, { isLoading }] = useLoginByUsername()
   const errors = useSelector(getUserAuthErrors)
 
-  const isEmailError = errors?.message.includes('email')
-  const isPasswordError = errors?.message.includes('пароль')
+  const isEmailError = errors?.message?.includes('email')
+  const isPasswordError = errors?.message?.includes('пароль')
 
   const onFinish = async (values: FieldType) => {
     const { email, password } = values
@@ -76,8 +76,8 @@ export const LoginForm: FC = () => {
           <Form.Item
             name="password"
             validateTrigger="onBlur"
-            validateStatus="error"
-            help={isPasswordError ? errors?.message : 'Неизвестная ошибка авторизации'}
+            validateStatus={errors?.message ? 'error' : ''}
+            help={errors?.message ? (isPasswordError ? errors.message : 'Неизвестная ошибка авторизации') : null}
             rules={[{ required: true, message: 'Пожалуйста, введите свой пароль' }]}
           >
             <Input prefix={<LockOutlined />} type="password" placeholder="Пароль" />
